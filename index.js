@@ -6,6 +6,8 @@ var resolve = require('path').resolve;
 var path = require('path');
 var pkgJson = {};
 var gufg = require('github-url-from-git');
+const urlParser = require('url');
+
 try {
   pkgJson = require(path.resolve(
     process.cwd(),
@@ -26,6 +28,20 @@ var parserOpts = {
   revertPattern: /^revert:\s([\s\S]*?)\s*This reverts commit (\w*)\./,
   revertCorrespondence: ['header', 'hash']
 };
+
+function jiraIssueUrl() {
+  
+  var url = null;
+  if (pkgJson.bugs && pkgJson.bugs.url && ~pkgJson.bugs.url.indexOf('jira')) {
+    var jiraUrl = urlParser.parse(pkgJson.bugs.url);
+
+    if (jiraUrl) {
+      return jiraUrl.protocol + "//" + jiraUrl.host + '/browse/';
+    } else {
+      return url;
+    }
+  }
+}
 
 function issueUrl() {
   var url = null;
@@ -76,17 +92,18 @@ var writerOpts = {
     }
 
     if (typeof commit.hash === 'string') {
-      commit.hash = commit.hash.substring(0, 7);
+      commit.hash = commit.hash.substring(0, 17);
     }
 
     if (typeof commit.subject === 'string') {
-      var url = issueUrl();
+      var url = jiraIssueUrl();
       if (url) {
-        // GitHub issue URLs.
-        commit.subject = commit.subject.replace(/( ?)#([0-9]+)(\b|^)/g, '$1[#$2](' + url + '$2)$3');
+        // Jira issue URLs.
+        commit.subject = commit.subject.replace(/((?:\:(\b|^))|(([A-Z]{2,}\-\d+)\2))/g, '[$3](' + url + '$3)$2');
+       // commit.subject = commit.subject.replace(/( ?)#([0-9]+)(\b|^)/g, '$1[#$2](' + url + '$2)$3');
       }
       // GitHub user URLs.
-      commit.subject = commit.subject.replace(/( ?)@([a-zA-Z0-9_]+)(\b|^)/g, '$1[@$2](https://github.com/$2)$3');
+      ///commit.subject = commit.subject.replace(/( ?)@([a-zA-Z0-9_]+)(\b|^)/g, '$1[@$2](https://github.com/$2)$3');
       commit.subject = commit.subject;
     }
 

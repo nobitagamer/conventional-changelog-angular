@@ -18,7 +18,7 @@ try {
 }
 
 var parserOpts = {
-  headerPattern: /^(\w*)(?:\((.*)\))?\\: (.*)$/,
+  headerPattern: /^(\w*)(?:\((.*)\))?: (.*)$/,
   headerCorrespondence: [
     'type',
     'scope',
@@ -63,13 +63,12 @@ var writerOpts = {
     commit.notes.forEach(function (note) {
       if (note.title === 'BREAKING CHANGE') {
         note.title = 'BREAKING CHANGES'
-        discard = false
       }
 
       if (note.title.startsWith('ISSUES CLOSED')) {
-        note.text = note.text.replace(/((?:\\:(\b|^))|(([A-Z]{2,}\-\d+)\2))/g, '[$3](' + url + '$3)$2')
-        discard = true
+        note.text = note.text.replace(/((?::(\b|^))|(([A-Z]{2,}\-\d+)\2))/g, '[$3](' + url + '$3)$2')
       }
+      discard = false
     })
 
     if (commit.type === 'feat') {
@@ -105,7 +104,7 @@ var writerOpts = {
     if (typeof commit.subject === 'string') {
       if (url) {
         // Jira issue URLs.
-        commit.subject = commit.subject.replace(/((?:\\:(\b|^))|(([A-Z]{2,}\-\d+)\2))/g, '[$3](' + url + '$3)$2')
+        commit.subject = commit.subject.replace(/((?::(\b|^))|(([A-Z]{2,}\-\d+)\2))/g, '[$3](' + url + '$3)$2')
       // commit.subject = commit.subject.replace(/( ?)#([0-9]+)(\b|^)/g, '$1[#$2](' + url + '$2)$3')
       }
       // GitHub user URLs.
